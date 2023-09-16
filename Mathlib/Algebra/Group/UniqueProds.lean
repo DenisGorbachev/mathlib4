@@ -198,7 +198,7 @@ theorem to_mulOpposite (h : UniqueMul A B a0 b0) :
 theorem iff_mulOpposite :
     UniqueMul (B.map ⟨_, op_injective⟩) (A.map ⟨_, op_injective⟩) (op b0) (op a0) ↔
       UniqueMul A B a0 b0 :=
-⟨of_mulOpposite, to_mulOpposite⟩
+  ⟨of_mulOpposite, to_mulOpposite⟩
 
 end Opposites
 
@@ -251,10 +251,10 @@ open Finset MulOpposite in
 @[to_additive]
 theorem of_mulOpposite (h : @UniqueProds Gᵐᵒᵖ (MulOpposite.mul G)) :
     UniqueProds G :=
-⟨fun hA hB =>
-  let f : G ↪ Gᵐᵒᵖ := ⟨op, op_injective⟩
-  let ⟨y, yB, x, xA, hxy⟩ := h.uniqueMul_of_nonempty (hB.map (f := f)) (hA.map (f := f))
-  ⟨unop x, (mem_map' _).mp xA, unop y, (mem_map' _).mp yB, hxy.of_mulOpposite⟩⟩
+  ⟨fun hA hB =>
+    let f : G ↪ Gᵐᵒᵖ := ⟨op, op_injective⟩
+    let ⟨y, yB, x, xA, hxy⟩ := h.uniqueMul_of_nonempty (hB.map (f := f)) (hA.map (f := f))
+    ⟨unop x, (mem_map' _).mp xA, unop y, (mem_map' _).mp yB, hxy.of_mulOpposite⟩⟩
 
 -- see Note [lower instance priority]
 /-- This instance asserts that if `G` has a right-cancellative multiplication, a linear order,
@@ -262,7 +262,7 @@ theorem of_mulOpposite (h : @UniqueProds Gᵐᵒᵖ (MulOpposite.mul G)) :
 @[to_additive
   "This instance asserts that if `G` has a right-cancellative addition, a linear order,
   and addition is strictly monotone w.r.t. the second argument, then `G` has `UniqueSums`." ]
-instance (priority := 100) of_Covariant_right [IsRightCancelMul G]
+instance (priority := 100) of_covariant_right [IsRightCancelMul G]
     [LinearOrder G] [CovariantClass G G (· * ·) (· < ·)] :
     UniqueProds G where
   uniqueMul_of_nonempty {A B} hA hB := by
@@ -285,12 +285,12 @@ open MulOpposite in
 instance (priority := 100) of_Covariant_left [IsLeftCancelMul G]
     [LinearOrder G] [CovariantClass G G (Function.swap (· * ·)) (· < ·)] :
     UniqueProds G :=
-let _ := LinearOrder.lift' (unop : Gᵐᵒᵖ → G) unop_injective
-let _ : CovariantClass Gᵐᵒᵖ Gᵐᵒᵖ (· * ·) (· < ·) :=
-{ elim := fun _ _ _ bc =>
-          have : StrictMono (unop (α := G)) := fun _ _ => id
-          mul_lt_mul_right' (α := G) bc (unop _) }
-of_mulOpposite of_Covariant_right
+  let _ := LinearOrder.lift' (unop : Gᵐᵒᵖ → G) unop_injective
+  let _ : CovariantClass Gᵐᵒᵖ Gᵐᵒᵖ (· * ·) (· < ·) :=
+    { elim := fun _ _ _ bc =>
+        have : StrictMono (unop (α := G)) := fun _ _ => id
+        mul_lt_mul_right' (α := G) bc (unop _) }
+  of_mulOpposite of_covariant_right
 
 open Finset
 @[to_additive]
@@ -307,7 +307,7 @@ theorem mulHom_image_of_injective (f : H →ₙ* G) (hf : Function.Injective f) 
 @[to_additive "`UniqueSums` is preserved under additive equivalences."]
 theorem mulHom_image_iff (f : G ≃* H) :
     UniqueProds G ↔ UniqueProds H :=
-⟨mulHom_image_of_injective f.symm f.symm.injective, mulHom_image_of_injective f f.injective⟩
+  ⟨mulHom_image_of_injective f.symm f.symm.injective, mulHom_image_of_injective f f.injective⟩
 
 @[to_additive] instance [UniqueProds G] [UniqueProds H] : UniqueProds (G × H) where
   uniqueMul_of_nonempty {A B} hA hB := by
