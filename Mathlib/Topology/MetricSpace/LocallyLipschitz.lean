@@ -49,24 +49,40 @@ protected lemma of_C1 {E F: Type*} {f : E → E} [NormedAddCommGroup E] [NormedS
   rcases (ContDiffAt.exists_lipschitzOnWith (ContDiff.contDiffAt hf)) with ⟨K, t, ht, hf⟩
   use K, t
 
--- /-- The composition of locally Lipschitz functions is locally Lipschitz. --/
--- lemma LocallyLipschitz_comp {f : Y → X} {g : X → Y}
---     (hf : LocallyLipschitz f) (hg : LocallyLipschitz g) : LocallyLipschitz (f ∘ g) := by
---   intro x
---   rcases hg x with ⟨Kg, t, ht, hgL⟩
---   rcases hf (g x) with ⟨Kf, t₂, ht', hfL⟩
---   -- Shrinking t if necessary, we can assume f is Lipschitz on g t:
---   -- replace t₂ by t₂' := g(t)∩t₂ and t by g⁻¹(t₂').
---   let t₂' := (g '' t) ∩ t₂
---   let t' := g ⁻¹' t₂'
---   have : t₂' ∈ 𝓝 (g x) := by sorry --exact?
---   have : t' ∈ 𝓝 x := by sorry --exact?
---   have : g '' t' = t₂' := sorry
+open NNReal Set
+-- tweaked version of the result in mathlib, weaker hypotheses -- not just restricting the domain,
+-- but also weakening the assumption on the codomain
+theorem comp_lipschitzOnWith' {Kf Kg : ℝ≥0} {f : Y → Z} {g : X → Y} {s : Set X}
+    (hf : LipschitzOnWith Kf f (g '' s)) (hg : LipschitzOnWith Kg g s) : LipschitzOnWith (Kf * Kg) (f ∘ g) s := by
+  intro x hx y hy
+  calc edist ((f ∘ g) x) ((f ∘ g) y)
+    _ ≤ Kf * edist (g x) (g y) := hf (mem_image_of_mem g hx) (mem_image_of_mem g hy)
+    _ ≤ Kf * (Kg * edist x y) := by exact mul_le_mul_left' (hg hx hy) Kf
+    _ = ↑(Kf * Kg) * edist x y := by rw [← mul_assoc, @ENNReal.coe_mul]
 
---   have hfL': LipschitzOnWith Kf f t₂' := LipschitzOnWith.mono hfL (by apply inter_subset_right)
---   have hgL': LipschitzOnWith Kg g t' := LipschitzOnWith.mono hgL (by sorry)--(by apply inter_subset_left)
---   --apply LipschitzWith.comp_lipschitzOnWith hfL' hgL'
---   sorry
+/-- The composition of locally Lipschitz functions is locally Lipschitz. --/
+lemma LocallyLipschitz_comp {f : Y → Z} {g : X → Y}
+    (hf : LocallyLipschitz f) (hg : LocallyLipschitz g) : LocallyLipschitz (f ∘ g) := by
+  intro x
+  rcases hg x with ⟨Kg, t₁, ht₁, hgL⟩
+  -- g is Lipschitz on t, f is Lipschitz on u ∋ g(x)
+  rcases hf (g x) with ⟨Kf, u, hu, hfL⟩
+  -- Consider the restriction of g to t. In particular, this restriction is Lipschitz and continuous.
+  let f' := Set.restrict t₁ g
+  -- have : LipschitzWith Kg f' := LipschitzOnWith.to_restrict hgL
+  have : Continuous f' := LipschitzWith.continuous (LipschitzOnWith.to_restrict hgL)
+  -- Thus, t₂ := g' ⁻¹ (u) is a neighbourhood of x in s and f is Lipschitz on g(t₂).
+  let t₂ := f' ⁻¹' u
+  let t₂ : Set X := t₂
+  have : t₂ ∈ 𝓝 x := by sorry
+  have h₁ : LipschitzOnWith Kg g t₂ := by
+    refine LipschitzOnWith.mono hgL ?_
+    sorry -- mathematically obvious
+    --have : (f' ⁻¹' univ) : Set X ⊆ t₁ := by sorry --apply?
+    --apply Set.subset_preimage_univ
+  have h₂ : LipschitzOnWith Kf f (g '' t₂) := sorry
+  -- apply comp_lipschitzOnWith' h₁ h₂
+  sorry
 
 -- /-- The sum of locally Lipschitz functions is locally Lipschitz. -/
 -- lemma LocallyLipschitz_sum {f g : X → Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y]
