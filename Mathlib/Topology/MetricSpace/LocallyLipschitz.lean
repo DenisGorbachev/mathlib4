@@ -84,47 +84,67 @@ lemma LocallyLipschitz_comp {f : Y → Z} {g : X → Y}
   -- apply comp_lipschitzOnWith' h₁ h₂
   sorry
 
--- /-- The sum of locally Lipschitz functions is locally Lipschitz. -/
--- lemma LocallyLipschitz_sum {f g : X → Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y]
---     (hf : LocallyLipschitz f) (hg : LocallyLipschitz g) : LocallyLipschitz (f + g) := by
---   intro x
---   rcases hf x with ⟨Kf, t₁, h₁t, hfL⟩
---   rcases hg x with ⟨Kg, t₂, h₂t, hgL⟩
---   use Kf + Kg, t₁ ∩ t₂
---   have as: LipschitzOnWith Kf f (t₁∩t₂) := LipschitzOnWith.mono hfL (Set.inter_subset_left t₁ t₂)
---   have bs: LipschitzOnWith Kg g (t₁∩t₂) := LipschitzOnWith.mono hgL (Set.inter_subset_right t₁ t₂)
---   constructor
---   · exact Filter.inter_mem h₁t h₂t
---   · sorry -- exact?
+/-- If `f` and `g` are locally Lipschitz, so is the induced map `f × g` to the product type. -/
+protected lemma prod {f : X → Y} (hf : LocallyLipschitz f) {g : X → Z} (hg : LocallyLipschitz g) :
+    LocallyLipschitz fun x => (f x, g x) := by
+  intro x
+  rcases hf x with ⟨Kf, t₁, h₁t, hfL⟩
+  rcases hg x with ⟨Kg, t₂, h₂t, hgL⟩
+  use max Kf Kg, t₁ ∩ t₂
+  constructor
+  · exact Filter.inter_mem h₁t h₂t
+  · intro y hy z hz
+    have h₁ : edist (f y) (f z) ≤ Kf * edist y z := by
+      exact LipschitzOnWith.mono hfL (inter_subset_left t₁ t₂) hy hz
+    have h₂ : edist (g y) (g z) ≤ Kg * edist y z := by
+      exact LipschitzOnWith.mono hgL (inter_subset_right t₁ t₂) hy hz
+    rw [ENNReal.coe_mono.map_max, Prod.edist_eq, ENNReal.max_mul]
+    exact max_le_max h₁ h₂
 
+/-- The sum of locally Lipschitz functions is locally Lipschitz. -/
+lemma LocallyLipschitz_sum {f g : X → Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y]
+    (hf : LocallyLipschitz f) (hg : LocallyLipschitz g) : LocallyLipschitz (f + g) := by
+  intro x
+  rcases hf x with ⟨Kf, t₁, h₁t, hfL⟩
+  rcases hg x with ⟨Kg, t₂, h₂t, hgL⟩
+  use Kf + Kg, t₁ ∩ t₂
+  have hf' : LipschitzOnWith Kf f (t₁ ∩ t₂) := LipschitzOnWith.mono hfL (Set.inter_subset_left t₁ t₂)
+  have hg' : LipschitzOnWith Kg g (t₁ ∩ t₂) := LipschitzOnWith.mono hgL (Set.inter_subset_right t₁ t₂)
+  constructor
+  · exact Filter.inter_mem h₁t h₂t
+  · intro y hy z hz
+    simp only [Pi.add_apply, ENNReal.coe_add]
+    sorry
+
+#exit
 section missing -- analogues of theorems for LipschitzWith
 variable {α : Type*} [PseudoEMetricSpace α] {f g : α → ℝ} {Kf Kg : NNReal} {s : Set α}
 
-protected theorem max (hf : LipschitzOnWith Kf f s) (hg : LipschitzOnWith Kg g s) :
+protected theorem LipschitzOnWith.max (hf : LipschitzOnWith Kf f s) (hg : LipschitzOnWith Kg g s) :
     LipschitzOnWith (max Kf Kg) (fun x => max (f x) (g x)) s := by
   sorry --simpa only [(· ∘ ·), one_mul] using lipschitzWith_max.comp (hf.prod hg)
 
-protected theorem min (hf : LipschitzOnWith Kf f s) (hg : LipschitzOnWith Kg g s) :
+protected theorem LipschitzOnWith.min (hf : LipschitzOnWith Kf f s) (hg : LipschitzOnWith Kg g s) :
     LipschitzOnWith (max Kf Kg) (fun x => min (f x) (g x)) s := by
   sorry--simpa only [(· ∘ ·), one_mul] using lipschitzWith_min.comp (hf.prod hg)
 
-theorem max_const (hf : LipschitzOnWith Kf f s) (a : ℝ) :
+protected lemma LipschitzOnWith.max_const (hf : LipschitzOnWith Kf f s) (a : ℝ) :
     LipschitzOnWith Kf (fun x => max (f x) a) s := by
   sorry --simpa only [max_eq_left (zero_le Kf)] using hf.max (LipschitzWith.const a)
 
-theorem const_max (hf : LipschitzOnWith Kf f s) (a : ℝ) : LipschitzOnWith Kf (fun x => max a (f x)) s := by
+protected lemma LipschitzOnWith.const_max (hf : LipschitzOnWith Kf f s) (a : ℝ) : LipschitzOnWith Kf (fun x => max a (f x)) s := by
   simpa only [max_comm] using hf.max_const a
 
-theorem min_const (hf : LipschitzOnWith Kf f s) (a : ℝ) : LipschitzOnWith Kf (fun x => min (f x) a) s := by
+protected lemma LipschitzOnWith.min_const (hf : LipschitzOnWith Kf f s) (a : ℝ) : LipschitzOnWith Kf (fun x => min (f x) a) s := by
   sorry --simpa only [max_eq_left (zero_le Kf)] using hf.min (LipschitzWith.const a)
 
-theorem const_min (hf : LipschitzOnWith Kf f s) (a : ℝ) : LipschitzOnWith Kf (fun x => min a (f x)) s := by
+protected lemma LipschitzOnWith.const_min (hf : LipschitzOnWith Kf f s) (a : ℝ) : LipschitzOnWith Kf (fun x => min a (f x)) s := by
   simpa only [min_comm] using hf.min_const a
 end missing
 
 
 /-- The minimum of locally Lipschitz functions is locally Lipschitz. -/
-lemma LocallyLipschitz_min {f g : X → ℝ} (hf : LocallyLipschitz f) (hg : LocallyLipschitz g) :
+protected lemma min'' {f g : X → ℝ} (hf : LocallyLipschitz f) (hg : LocallyLipschitz g) :
     LocallyLipschitz (fun x => min (f x) (g x)) := by
   intro x
   rcases hf x with ⟨Kf, t₁, h₁t, hfL⟩
@@ -135,7 +155,7 @@ lemma LocallyLipschitz_min {f g : X → ℝ} (hf : LocallyLipschitz f) (hg : Loc
   exact ⟨Filter.inter_mem h₁t h₂t, LipschitzOnWith.min hfL' hgL'⟩
 
 /-- The maximum of locally Lipschitz functions is locally Lipschitz. -/
-lemma LocallyLipschitz_max {f g : X → ℝ} (hf : LocallyLipschitz f) (hg : LocallyLipschitz g) :
+protected lemma max {f g : X → ℝ} (hf : LocallyLipschitz f) (hg : LocallyLipschitz g) :
     LocallyLipschitz (fun x => max (f x) (g x)) := by
   intro x
   rcases hf x with ⟨Kf, t₁, h₁t, hfL⟩
@@ -146,7 +166,7 @@ lemma LocallyLipschitz_max {f g : X → ℝ} (hf : LocallyLipschitz f) (hg : Loc
   exact ⟨Filter.inter_mem h₁t h₂t, LipschitzOnWith.max hfL' hgL'⟩
 
 -- /-- Multiplying a locally Lipschitz function by a constant remains locally Lipschitz. -/
--- lemma LocallyLipschitz_scalarProduct {f : X → Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y] (hf : LocallyLipschitz f) {a : ℝ} :
+-- protected lemma scalarProduct {f : X → Y} [NormedAddCommGroup Y] [NormedSpace ℝ Y] (hf : LocallyLipschitz f) {a : ℝ} :
 --     LocallyLipschitz (fun x ↦ a • f x) := by
 --   intro x
 --   rcases hf x with ⟨Kf, t, ht, hfL⟩
